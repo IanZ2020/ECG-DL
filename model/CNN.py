@@ -1,8 +1,4 @@
 from torch import nn
-
-#Produce N identical layers
-
-
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
