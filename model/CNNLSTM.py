@@ -17,17 +17,17 @@ class CNNLSTM(nn.Module):
         self.layers = nn.Sequential(
             nn.Conv1d(in_channels=1,out_channels=128,kernel_size=50, stride=3),#[1,3600]->[128,1184]
             nn.ReLU(),
-            nn.BatchNorm1d(1184),
+            nn.BatchNorm1d(128),
             nn.MaxPool1d(kernel_size=2, stride=3),#[128,1184]->[128,395]
 
             nn.Conv1d(in_channels=128,out_channels=32, kernel_size=7, stride=1),#[128,1184]->[32,389]
             nn.ReLU(),
-            nn.BatchNorm1d(389),
+            nn.BatchNorm1d(32),
             nn.MaxPool1d(kernel_size=2, stride=2),#[32,389]->[32,194]
 
             nn.Conv1d(in_channels=32,out_channels=32, kernel_size=10, stride=1),#[32,194]->[32,185]
             nn.ReLU(),
-            nn.BatchNorm1d(185),
+            nn.BatchNorm1d(32),
             nn.MaxPool1d(kernel_size=2, stride=2),#[32,185]->[32,92]
 
             nn.LSTM(input_size=92,hidden_size=10,num_layers=1),
