@@ -29,8 +29,8 @@ class EcgDataset(Dataset):
         return len(self.data)
     
     def __getitem__(self, index):
-        x = self.data.iloc[index,0:len(self.data)]
-        y = self.data.iloc[index,len(self.data)]
+        x = self.data.iloc[index, 0:len(self.data.iloc[0,:])-1]
+        y = self.data.iloc[index, len(self.data.iloc[0,:])-1]
         x = torch.tensor(x,dtype=torch.float)
         y_one_hot = nn.functional.one_hot(torch.tensor(labels_map[y]), len(labels))
         return x.unsqueeze(0), y_one_hot
