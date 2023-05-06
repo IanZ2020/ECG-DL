@@ -5,3 +5,5 @@ data/*
 #jupyter notebook
 .ipynb_checkpoints
 *.ipynb
+
+/model/__pycache__
