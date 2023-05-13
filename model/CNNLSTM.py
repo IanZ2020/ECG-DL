@@ -15,33 +15,32 @@ class CNNLSTM(nn.Module):
     def __init__(self):
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Conv1d(in_channels=1,out_channels=10,kernel_size=3, stride=1),#[1,3600]->[10,3598]
+            nn.Conv1d(in_channels=1,out_channels=128,kernel_size=50, stride=3),#[1,3600]->[128,1184]
             nn.ReLU(),
-            nn.BatchNorm1d(10),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[10,3598]->[10,1799]
+            nn.BatchNorm1d(128),
+            nn.MaxPool1d(kernel_size=2, stride=3),#[128,1184]->[128,395]
 
-            nn.Conv1d(in_channels=10,out_channels=100, kernel_size=4, stride=1),#[10,1799]->[100,1796]
+            nn.Conv1d(in_channels=128,out_channels=32, kernel_size=7, stride=1),#[128,1184]->[32,389]
             nn.ReLU(),
-            nn.BatchNorm1d(100),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[100,1796]->[100,898]
+            nn.BatchNorm1d(32),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[32,389]->[32,194]
 
-            nn.Conv1d(in_channels=100,out_channels=200, kernel_size=4, stride=1),#[100,898]->[200,895]
+            nn.Conv1d(in_channels=32,out_channels=32, kernel_size=10, stride=1),#[32,194]->[32,185]
             nn.ReLU(),
-            nn.BatchNorm1d(200),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[200,895]->[200,447]
+            nn.BatchNorm1d(32),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[32,185]->[32,92]
 
-            nn.LSTM(input_size=447,hidden_size=100,num_layers=1),
-            SelectItem(0),#[200,447]->[200,100]
+            nn.LSTM(input_size=92,hidden_size=10,num_layers=1),
+            SelectItem(0),#[32,92]->[32,10]
 
-            nn.Flatten(-2,-1),#[200,100]->[20000]
-            nn.Linear(in_features=20000,out_features=300),#[20000]->[300]
+            nn.Flatten(-2,-1),#[32,10]->[320]
+            nn.Linear(in_features=320,out_features=20),#[320]->[20]
             nn.ReLU(),
             nn.Dropout(p=0.1),
-            nn.Linear(in_features=300,out_features=20),#[300]->[20]
+            nn.Linear(in_features=20,out_features=10),#[20]->[10]
             nn.ReLU(),
-            nn.Dropout(p=0.1),
-            nn.Linear(in_features=20,out_features=7),#[20]->[7]
-            nn.Softmax(dim=-1)
+            nn.Linear(in_features=10,out_features=7),#[10]->[7]
+            nn.Softmax()
         )
 
     def forward(self, input):
