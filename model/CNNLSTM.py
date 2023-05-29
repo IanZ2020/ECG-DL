@@ -21,6 +21,7 @@ class CNNLSTM(nn.Module):
     def __init__(self, bidirectional = False):
         super().__init__()
         self.bidirectional = bidirectional
+        self.D = 2 if bidirectional else 1
         self.layers = nn.Sequential(
             nn.Conv1d(in_channels=1,out_channels=5,kernel_size=3, stride=1),#[1,360]->[5,358]
             nn.ReLU(),
@@ -36,12 +37,12 @@ class CNNLSTM(nn.Module):
             nn.LSTM(input_size=10,hidden_size=64,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
             SelectItem(0),#[88,level+1]->[88,64]
             nn.Dropout(p=0.1),
-            nn.LSTM(input_size=64,hidden_size=32,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
+            nn.LSTM(input_size=64*self.D,hidden_size=32,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
             SelectItem(0),#[88,64]->[88,32]
             nn.Dropout(p=0.1),
 
             nn.Flatten(-2,-1),#[88,32]->[2816]
-            nn.Linear(in_features=2816,out_features=128),#[2816]->[128]
+            nn.Linear(in_features=2816*self.D,out_features=128),#[2816]->[128]
             nn.ReLU(),
             nn.Dropout(p=0.2),
             nn.Linear(in_features=128,out_features=5),#[128]->[5]
