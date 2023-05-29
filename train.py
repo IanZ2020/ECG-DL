@@ -5,21 +5,24 @@ from torch.utils.data import DataLoader
 import pandas as pd
 from model.CNN import CNN
 from model.CNNLSTM import CNNLSTM
-import time
+from model.WTLSTM import WTLSTM
+import wandb
 
-device = torch.device("mps")
+device = torch.device("cpu")
 
-labels=['N','V','L','R','A','F','S']
+labels=['N','V','/','L','R']
 labels_map = {label: i for i, label in enumerate(labels)}
 
 #hypermeter
-epochs = 100
-batch_size = 50
-learning_rate = 0.001
+model_name = "WTLSTM"
+epochs = 50
+batch_size = 128
+learning_rate = 0.0001
+step_size = 5
 
 #file path
-train_path = 'data/segmented_data/mitarr_train.csv'
-test_path = 'data/segmented_data/mitarr_test.csv'
+train_path = 'data/segment_with_beat_sampled/train.csv'
+test_path = 'data/segment_with_beat_sampled/test.csv'
 
 
 class EcgDataset(Dataset):
@@ -43,13 +46,14 @@ testing_data = EcgDataset(file=test_path)
 test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
 loss_fn = nn.CrossEntropyLoss()
 
-model = CNNLSTM()
+model = WTLSTM()
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-def train_loop(dataloader, model, loss_fn, optimizer, device):
+def train_loop(dataloader, model, loss_fn, optimizer, device, batch_size):
     size = len(dataloader.dataset)
+    correct = 0
     for batch, (x, y) in enumerate(dataloader):
         # Compute prediction and loss
         x, y = x.to(device), y.to(device)
@@ -61,15 +65,20 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), (batch + 1) * len(x)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        # count corrects
+        y_idx = torch.argmax(y,dim=1)
+        correct += (pred.argmax(dim = 1) == y_idx).type(torch.float).sum().item()
+        if (batch+1) % step_size == 0:
+            loss, current = loss.item(), batch * batch_size + len(x)
+            correct /= (step_size-1) * batch_size + len(x)
+            print(f"Train Accuracy: {(100*correct):>0.1f}%, Train Loss: {loss:>8f}   [{current:>5d}/{size:>5d}]")
+            wandb.log({"train_acc": correct, "train_loss": loss})
+            correct = .0
 
 def test_loop(dataloader, model, loss_fn, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
-    test_loss, correct = 0, 0
+    test_loss, correct = .0, .0
 
     with torch.no_grad():
         #for x, y in dataloader:
@@ -86,13 +95,31 @@ def test_loop(dataloader, model, loss_fn, device):
     
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")    
+    wandb.log({"test_acc": correct, "test_loss": test_loss})
+    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train_loop(train_dataloader, model, loss_fn, optimizer, device)
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="ecg-"+model_name,
+    
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": learning_rate,
+    "architecture": model_name,
+    "dataset": train_path,
+    "epochs": epochs,
+    "batch_size": batch_size,
+    "step_size": step_size
+    }
+)
+
+for epoch in range(epochs):
+    print(f"Epoch {epoch+1}\n-------------------------------")
+    train_loop(train_dataloader, model, loss_fn, optimizer, device, batch_size)
     test_loop(test_dataloader, model, loss_fn, device)
+wandb.finish()
 print("Done!")
 
 print("Saving model")
-torch.save(model, 'model.pth')
+model_path = model_name + f"_{learning_rate}lr_{epochs}epochs_{batch_size}bs_{step_size}step_size.pth"
+torch.save(model, model_path)
