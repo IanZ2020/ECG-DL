@@ -10,7 +10,7 @@ class SelectItem(nn.Module):
 
     def forward(self, inputs):
         return inputs[self.item_index]
-
+    
 class CNNLSTM(nn.Module):
     def __init__(self):
         super().__init__()
@@ -30,17 +30,17 @@ class CNNLSTM(nn.Module):
             nn.BatchNorm1d(32),
             nn.MaxPool1d(kernel_size=2, stride=2),#[32,185]->[32,92]
 
-            nn.LSTM(input_size=92,hidden_size=10,num_layers=1),
-            SelectItem(0),#[32,92]->[32,10]
+            nn.LSTM(input_size=92,hidden_size=10,num_layers=1,batch_first=True),
+            SelectItem(0),#[32,92]->[32,20]
 
-            nn.Flatten(-2,-1),#[32,10]->[320]
-            nn.Linear(in_features=320,out_features=20),#[320]->[20]
+            nn.Flatten(-2,-1),#[32,20]->[640]
+            nn.Linear(in_features=320,out_features=20),#[640]->[40]
             nn.ReLU(),
             nn.Dropout(p=0.1),
-            nn.Linear(in_features=20,out_features=10),#[20]->[10]
+            nn.Linear(in_features=20,out_features=10),#[40]->[20]
             nn.ReLU(),
-            nn.Linear(in_features=10,out_features=7),#[10]->[7]
-            nn.Softmax()
+            nn.Linear(in_features=10,out_features=7),#[20]->[7]
+            nn.Softmax(dim=-1)
         )
 
     def forward(self, input):

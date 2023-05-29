@@ -21,15 +21,15 @@ class CNN(nn.Module):
 
             nn.Conv1d(in_channels=128,out_channels=512, kernel_size=5, stride=1),#[128,45]->[512,41]
             nn.ReLU(),
-            nn.Conv1d(in_channels=512,out_channels=128, kernel_size=3, stride=2),#[512,41]->[128,20]
+            nn.Conv1d(in_channels=512,out_channels=128, kernel_size=3, stride=1),#[512,41]->[128,39]
             nn.ReLU(),
 
             nn.Flatten(-2,-1),#[128,20]->[2560]
-            nn.Linear(in_features=2560,out_features=512),#[2560]->[512]
+            nn.Linear(in_features=4992,out_features=512),#[2560]->[512]
             nn.ReLU(),
             nn.Dropout(p=0.1),
             nn.Linear(in_features=512,out_features=7),#[512]->[7]
-            nn.Softmax()
+            nn.Softmax(dim=-1)
         )
     def forward(self, input):
         output = self.cnn(input)
