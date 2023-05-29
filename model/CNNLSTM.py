@@ -1,5 +1,5 @@
 from torch import nn
-
+import torch
 #pick out an element from a tuple or list
 #SelectItem can be used in Sequential to pick out the hidden state
 class SelectItem(nn.Module):
@@ -10,39 +10,49 @@ class SelectItem(nn.Module):
 
     def forward(self, inputs):
         return inputs[self.item_index]
-    
-class CNNLSTM(nn.Module):
+
+class Transpose(nn.Module):
     def __init__(self):
         super().__init__()
+        self._name = 'transpose'
+    def forward(self, inputs):
+        return torch.transpose(inputs, -2, -1)
+class CNNLSTM(nn.Module):
+    def __init__(self, bidirectional = False):
+        super().__init__()
+        self.bidirectional = bidirectional
         self.layers = nn.Sequential(
-            nn.Conv1d(in_channels=1,out_channels=128,kernel_size=50, stride=3),#[1,3600]->[128,1184]
+            nn.Conv1d(in_channels=1,out_channels=5,kernel_size=3, stride=1),#[1,360]->[5,358]
             nn.ReLU(),
-            nn.BatchNorm1d(128),
-            nn.MaxPool1d(kernel_size=2, stride=3),#[128,1184]->[128,395]
+            nn.BatchNorm1d(5),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[5,358]->[5,179]
 
-            nn.Conv1d(in_channels=128,out_channels=32, kernel_size=7, stride=1),#[128,1184]->[32,389]
+            nn.Conv1d(in_channels=5,out_channels=10, kernel_size=4, stride=1),#[5,179]->[10, 176]
             nn.ReLU(),
-            nn.BatchNorm1d(32),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[32,389]->[32,194]
+            nn.BatchNorm1d(10),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[10, 176]->[10, 88]
 
-            nn.Conv1d(in_channels=32,out_channels=32, kernel_size=10, stride=1),#[32,194]->[32,185]
-            nn.ReLU(),
-            nn.BatchNorm1d(32),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[32,185]->[32,92]
-
-            nn.LSTM(input_size=92,hidden_size=10,num_layers=1,batch_first=True),
-            SelectItem(0),#[32,92]->[32,20]
-
-            nn.Flatten(-2,-1),#[32,20]->[640]
-            nn.Linear(in_features=320,out_features=20),#[640]->[40]
-            nn.ReLU(),
+            Transpose(),#[10, 88]->[88,10]
+            nn.LSTM(input_size=10,hidden_size=64,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
+            SelectItem(0),#[88,level+1]->[88,64]
             nn.Dropout(p=0.1),
-            nn.Linear(in_features=20,out_features=10),#[40]->[20]
+            nn.LSTM(input_size=64,hidden_size=32,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
+            SelectItem(0),#[88,64]->[88,32]
+            nn.Dropout(p=0.1),
+
+            nn.Flatten(-2,-1),#[88,32]->[2816]
+            nn.Linear(in_features=2816,out_features=128),#[2816]->[128]
             nn.ReLU(),
-            nn.Linear(in_features=10,out_features=7),#[20]->[7]
+            nn.Dropout(p=0.2),
+            nn.Linear(in_features=128,out_features=5),#[128]->[5]
             nn.Softmax(dim=-1)
         )
 
     def forward(self, input):
         output = self.layers(input)
         return output
+    
+# x = torch.rand(5,1,360)
+# model = CNNLSTM()
+# pred = model(x)
+# print(pred)
