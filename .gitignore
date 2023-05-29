@@ -7,3 +7,7 @@ data/*
 *.ipynb
 
 /model/__pycache__
+
+output_dir/*
+
+wandb
