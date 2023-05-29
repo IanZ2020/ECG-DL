@@ -19,6 +19,7 @@ epochs = 50
 batch_size = 128
 learning_rate = 0.0001
 step_size = 5
+bidirectional = True
 
 #file path
 train_path = 'data/segment_with_beat_sampled/train.csv'
@@ -46,7 +47,7 @@ testing_data = EcgDataset(file=test_path)
 test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
 loss_fn = nn.CrossEntropyLoss()
 
-model = WTLSTM()
+model = WTLSTM(level=3, bidirectional = bidirectional)
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
