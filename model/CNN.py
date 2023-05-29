@@ -3,33 +3,28 @@ class CNN(nn.Module):
     def __init__(self):
         super().__init__()
         self.cnn = nn.Sequential(
-            nn.Conv1d(in_channels=1,out_channels=128,kernel_size=50, stride=3),#[1,3600]->[128,1184]
+            nn.Conv1d(in_channels=1,out_channels=5,kernel_size=3, stride=1),#[1,360]->[5,358]
             nn.ReLU(),
-            nn.BatchNorm1d(1184),
-            nn.MaxPool1d(kernel_size=2, stride=3),#[128,1184]->[128,395]
+            nn.BatchNorm1d(5),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[5,358]->[5,179]
 
-            nn.Conv1d(in_channels=128,out_channels=32, kernel_size=7, stride=1),#[128,1184]->[32,389]
+            nn.Conv1d(in_channels=5,out_channels=10, kernel_size=4, stride=1),#[5,179]->[10, 176]
             nn.ReLU(),
-            nn.BatchNorm1d(389),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[32,389]->[32,194]
+            nn.BatchNorm1d(10),
+            nn.MaxPool1d(kernel_size=2, stride=2),#[10, 176]->[10, 88]
 
-            nn.Conv1d(in_channels=32,out_channels=32, kernel_size=10, stride=1),#[32,194]->[32,185]
+            nn.Conv1d(in_channels=10,out_channels=20, kernel_size=4, stride=1),#[10, 88]->[20,85]
             nn.ReLU(),
-            nn.Conv1d(in_channels=32,out_channels=128, kernel_size=5, stride=2),#[32,185]->[128,91]
-            nn.ReLU(),
-            nn.MaxPool1d(kernel_size=2, stride=2),#[128,91]->[128,45]
+            nn.MaxPool1d(kernel_size=2, stride=2),#[20,85]->[20,42]
 
-            nn.Conv1d(in_channels=128,out_channels=512, kernel_size=5, stride=1),#[128,45]->[512,41]
-            nn.ReLU(),
-            nn.Conv1d(in_channels=512,out_channels=128, kernel_size=3, stride=2),#[512,41]->[128,20]
-            nn.ReLU(),
-
-            nn.Flatten(-2,-1),#[128,20]->[2560]
-            nn.Linear(in_features=2560,out_features=512),#[2560]->[512]
+            nn.Flatten(-2,-1),#[20,43]->[840]
+            nn.Linear(in_features=840,out_features=30),#[840]->[30]
             nn.ReLU(),
             nn.Dropout(p=0.1),
-            nn.Linear(in_features=512,out_features=7),#[512]->[7]
-            nn.Softmax()
+            nn.Linear(in_features=30,out_features=20),#[30]->[20]
+            nn.ReLU(),
+            nn.Linear(in_features=20,out_features=5),#[20]->[5]
+            nn.Softmax(dim=-1)
         )
     def forward(self, input):
         output = self.cnn(input)
