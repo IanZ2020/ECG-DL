@@ -5,6 +5,9 @@ import pandas as pd
 import os
 import random
 from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset
+import torch
+from torch import nn
 
 AAMI=['N','V','/','L','R']
 
@@ -12,6 +15,23 @@ AAMI=['N','V','/','L','R']
 rootdir = 'data/mit-bih-arrhythmia-database-1.0.0'
 #rootdir = 'data/mit-bih-st-change-database-1.0.0'
 #rootdir = 'data/sudden-cardiac-death-holter-database-1.0.0'
+
+class EcgDataset(Dataset):
+    def __init__(self, file, labels):
+        self.labels = labels
+        self.label_map = {label: i for i, label in enumerate(labels)}
+        self.data = pd.read_csv(file)
+        super().__init__()
+
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self, index):
+        x = self.data.iloc[index, 0:len(self.data.iloc[0,:])-1]
+        y = self.data.iloc[index, len(self.data.iloc[0,:])-1]
+        x = torch.tensor(x,dtype=torch.float)
+        y_one_hot = nn.functional.one_hot(torch.tensor(self.label_map[y]), len(self.labels))
+        return x.unsqueeze(0), y_one_hot
 
 def get_namelist(rootdir):
     files = os.listdir(rootdir)
@@ -86,9 +106,9 @@ def get_segmented_signal_with_sample(rootdir, lead_type = 'MLII', window_size = 
         labels = annotation.symbol
         for i, label in enumerate(labels):
             if label in heartbeat_types:
+                if random.random() > 1/5: continue
                 if label=='N':
-                    random_number = random.random()
-                    if random_number > 1/7: continue
+                    if random.random() > 1/7: continue
                 start = annotation.sample[i] - window_size // 2
                 end = annotation.sample[i] + window_size // 2
                 if start >= 0 and end < len(record.p_signal):
@@ -115,5 +135,5 @@ def save_dataset(heartbeat_segments, heartbeat_labels, test_size = 0.25):
     test_df.to_csv('test.csv', index=False)
     print('Finished!')
 
-heartbeat_segments, heartbeat_labels = get_segmented_signal(rootdir, lead_type = 'MLII', window_size = 360, heartbeat_types = AAMI)
-#save_dataset(heartbeat_segments, heartbeat_labels, test_size = 0.25)
+# heartbeat_segments, heartbeat_labels = get_segmented_signal_with_sample(rootdir, lead_type = 'MLII', window_size = 360, heartbeat_types = AAMI)
+# save_dataset(heartbeat_segments, heartbeat_labels, test_size = 0.25)

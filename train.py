@@ -2,53 +2,37 @@ import torch
 from torch import nn
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import pandas as pd
 from model.CNN import CNN
 from model.CNNLSTM import CNNLSTM
 from model.WTLSTM import WTLSTM
 import wandb
+from utils.data_utils import EcgDataset
 
 device = torch.device("cpu")
 
 labels=['N','V','/','L','R']
-labels_map = {label: i for i, label in enumerate(labels)}
 
 #hypermeter
 model_name = "WTLSTM"
-epochs = 50
+epochs = 80
 batch_size = 128
 learning_rate = 0.0001
 step_size = 5
+bidirectional = True
 
 #file path
-train_path = 'data/segment_with_beat_sampled/train.csv'
-test_path = 'data/segment_with_beat_sampled/test.csv'
+train_path = 'data/small_data/train.csv'
+test_path = 'data/small_data/test.csv'
 
+#model
+model = WTLSTM(bidirectional = bidirectional,level=3)
 
-class EcgDataset(Dataset):
-    def __init__(self, file):
-        self.data = pd.read_csv(file)
-        super().__init__()
-
-    def __len__(self):
-        return len(self.data)
-    
-    def __getitem__(self, index):
-        x = self.data.iloc[index, 0:len(self.data.iloc[0,:])-1]
-        y = self.data.iloc[index, len(self.data.iloc[0,:])-1]
-        x = torch.tensor(x,dtype=torch.float)
-        y_one_hot = nn.functional.one_hot(torch.tensor(labels_map[y]), len(labels))
-        return x.unsqueeze(0), y_one_hot
-
-training_data = EcgDataset(file=train_path)
+training_data = EcgDataset(file=train_path, labels=labels)
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-testing_data = EcgDataset(file=test_path)
+testing_data = EcgDataset(file=test_path, labels=labels)
 test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
 loss_fn = nn.CrossEntropyLoss()
-
-model = WTLSTM()
 model.to(device)
-
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 def train_loop(dataloader, model, loss_fn, optimizer, device, batch_size):
@@ -81,11 +65,6 @@ def test_loop(dataloader, model, loss_fn, device):
     test_loss, correct = .0, .0
 
     with torch.no_grad():
-        #for x, y in dataloader:
-        #    x, y = x.to(device), y.to(device)
-        #    pred = model(x)
-        #    print(pred)
-        #    break
         for x, y in dataloader:
             x, y = x.to(device), y.to(device)
             pred = model(x)
@@ -121,5 +100,5 @@ wandb.finish()
 print("Done!")
 
 print("Saving model")
-model_path = model_name + f"_{learning_rate}lr_{epochs}epochs_{batch_size}bs_{step_size}step_size.pth"
+model_path = model_name + f"_bid_{learning_rate}lr_{epochs}epochs_{batch_size}bs_{step_size}step_size.pth"
 torch.save(model, model_path)

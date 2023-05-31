@@ -40,18 +40,19 @@ class WTLSTM(nn.Module):
         self.level = level
         self.wavelet = wavelet
         self.bidirectional = bidirectional
+        self.D = 2 if bidirectional else 1
         self.layers = nn.Sequential(
             WTLayer(wavelet=self.wavelet, level=self.level),
 
             nn.LSTM(input_size=self.level+1,hidden_size=64,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
             SelectItem(0),#[360,level+1]->[360,64]
             nn.Dropout(p=0.1),
-            nn.LSTM(input_size=64,hidden_size=32,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
+            nn.LSTM(input_size=64*self.D,hidden_size=32,num_layers=1,batch_first=True, bidirectional = self.bidirectional),
             SelectItem(0),#[360,64]->[360,32]
             nn.Dropout(p=0.1),
 
             nn.Flatten(-2,-1),#[360,32]->[11520]
-            nn.Linear(in_features=11520,out_features=128),#[11520]->[128]
+            nn.Linear(in_features=11520*self.D,out_features=128),#[11520]->[128]
             nn.ReLU(),
             nn.Dropout(p=0.2),
             nn.Linear(in_features=128,out_features=5),#[128]->[5]
@@ -61,7 +62,7 @@ class WTLSTM(nn.Module):
         output = self.layers(input)
         return output
     
-# x = torch.rand(21,360)
-# model = WTLSTM()
+# x = torch.rand(21,1,360)
+# model = WTLSTM(level=3, bidirectional = True)
 # pred=model(x)
 # print(pred)
