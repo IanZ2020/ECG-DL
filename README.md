@@ -260,6 +260,8 @@ CNN通过在训练过程中自动学习适合特定任务的特征表示，具�
 
 本实验也存在一定的不足。首先使用的数据集 MIT-BIH arrhythmia databas仅包含48个病人的心电图数据，在该数据集上训练得到的模型泛化到所有人群的能力可能不强，改进方法是在数据集中囊括更多人的心电图数据。其次，模型对VPC信号的敏感程度不高，改进方法是在数据集中提高VPC信号的分布概率。最后，本实验仅实现了对心拍信号的5分类，距离实际诊断心血管疾病仍有一定距离。这也是可能的未来进展方向。
 
+Github项目链接：https://github.com/IanZ2020/ECG-DL
+
 ## 7. 参考文献
 
 1.Acharya, U.R. *et al.* (2017) ‘A deep convolutional neural network model to classify heartbeats’, *Computers in Biology and Medicine*, 89, pp. 389–396. Available at: https://doi.org/10.1016/j.compbiomed.2017.08.022.
