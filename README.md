@@ -259,3 +259,21 @@ CNN通过在训练过程中自动学习适合特定任务的特征表示，具�
 本实验基于神经网络实现了对心电图信号的5分类。实验中首先复现了前人提出的WT-LSTM模型和CNN模型，基于对实验结果理解将这两种模型融合，将CNN模型的前两层作为信号的滤波器和特征提取器，WT-LSTM模型的LSTM部分作为特征分析器，提出了一种CNN-LSTM系列的模型。实验结果表明，双向的CNN-bidLSTM在测试集测试效果极佳，达到了99.39%的准确率，超过了WT-LSTM和CNN模型。CNN-LSTM系列模型还在训练和部署成本上具有显著优势，在面对数据集数量少的情况下也达到了最高98.58%的准确率，远超过其他模型。因此CNN-LSTM系列模型在实际应用中具有重要优势。
 
 本实验也存在一定的不足。首先使用的数据集 MIT-BIH arrhythmia databas仅包含48个病人的心电图数据，在该数据集上训练得到的模型泛化到所有人群的能力可能不强，改进方法是在数据集中囊括更多人的心电图数据。其次，模型对VPC信号的敏感程度不高，改进方法是在数据集中提高VPC信号的分布概率。最后，本实验仅实现了对心拍信号的5分类，距离实际诊断心血管疾病仍有一定距离。这也是可能的未来进展方向。
+
+## 7. 参考文献
+
+1.Acharya, U.R. *et al.* (2017) ‘A deep convolutional neural network model to classify heartbeats’, *Computers in Biology and Medicine*, 89, pp. 389–396. Available at: https://doi.org/10.1016/j.compbiomed.2017.08.022.
+
+2.Faust, O. *et al.* (2018) ‘Automated detection of atrial fibrillation using long short-term memory network with RR interval signals’, *Computers in Biology and Medicine*, 102, pp. 327–335. Available at: https://doi.org/10.1016/j.compbiomed.2018.07.001.
+
+3.Liu, X. *et al.* (2021) ‘Deep learning in ECG diagnosis: A review’, *Knowledge-Based Systems*, 227, p. 107187. Available at: https://doi.org/10.1016/j.knosys.2021.107187.
+
+4.Pham, H. *et al.* (2023) ‘Machine learning-based detection of cardiovascular disease using ECG signals: performance vs. complexity’. arXiv. Available at: http://arxiv.org/abs/2303.11429 (Accessed: 2 May 2023).
+
+5.Ribeiro, A.H. *et al.* (2020) ‘Automatic diagnosis of the 12-lead ECG using a deep neural network’, *Nature Communications*, 11(1), p. 1760. Available at: https://doi.org/10.1038/s41467-020-15432-4.
+
+6.Siontis, K.C. *et al.* (2021) ‘Artificial intelligence-enhanced electrocardiography in cardiovascular disease management’, *Nature Reviews Cardiology*, 18(7), pp. 465–478. Available at: https://doi.org/10.1038/s41569-020-00503-2.
+
+7.Wang, G. *et al.* (2019) ‘A global and updatable ECG beat classification system based on recurrent neural networks and active learning’, *Information Sciences*, 501, pp. 523–542. Available at: https://doi.org/10.1016/j.ins.2018.06.062.
+
+8.Yildirim, Ö. (2018) ‘A novel wavelet sequence based on deep bidirectional LSTM network model for ECG signal classification’, *Computers in Biology and Medicine*, 96, pp. 189–202. Available at: https://doi.org/10.1016/j.compbiomed.2018.03.016.
